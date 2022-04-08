@@ -1,7 +1,7 @@
-pragma solidity =0.6.6;
+pragma solidity >=0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import './libraries/TransferHelper.sol';
 
 import './interfaces/IUniswapV2Router02.sol';
 import './libraries/UniswapV2Library.sol';
@@ -9,24 +9,31 @@ import './libraries/SafeMath.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
-contract UniswapV2Router02 is IUniswapV2Router02 {
-    using SafeMath for uint;
+import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
+contract OpenGSNUniswapV2Router02 is IUniswapV2Router02, BaseRelayRecipient {
+    using SafeMath for uint;
     address public immutable override factory;
     address public immutable override WETH;
+    string public override versionRecipient = "2.0.0";
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
         _;
     }
 
-    constructor(address _factory, address _WETH) public {
+    /**
+      * Also set the forwarder, as this is OpenGSN-aware.
+      *
+    */
+    constructor(address _factory, address _WETH, address _forwarder) public {
         factory = _factory;
         WETH = _WETH;
+        _setTrustedForwarder(_forwarder);
     }
 
     receive() external payable {
-        assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+        assert(_msgSender() == WETH); // only accept ETH via fallback from the WETH contract
     }
 
     // **** ADD LIQUIDITY ****
@@ -68,11 +75,15 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         address to,
         uint deadline
     ) external virtual override ensure(deadline) returns (uint amountA, uint amountB, uint liquidity) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
         address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
-        TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
-        TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
+        TransferHelper.safeTransferFrom(tokenA, _msgSender(), pair, amountA);
+        TransferHelper.safeTransferFrom(tokenB, _msgSender(), pair, amountB);
         liquidity = IUniswapV2Pair(pair).mint(to);
+        */
     }
     function addLiquidityETH(
         address token,
@@ -82,6 +93,9 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         address to,
         uint deadline
     ) external virtual override payable ensure(deadline) returns (uint amountToken, uint amountETH, uint liquidity) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         (amountToken, amountETH) = _addLiquidity(
             token,
             WETH,
@@ -91,12 +105,13 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
             amountETHMin
         );
         address pair = UniswapV2Library.pairFor(factory, token, WETH);
-        TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
+        TransferHelper.safeTransferFrom(token, _msgSender(), pair, amountToken);
         IWETH(WETH).deposit{value: amountETH}();
         assert(IWETH(WETH).transfer(pair, amountETH));
         liquidity = IUniswapV2Pair(pair).mint(to);
         // refund dust eth, if any
-        if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
+        if (msg.value > amountETH) TransferHelper.safeTransferETH(_msgSender(), msg.value - amountETH);
+        */
     }
 
     // **** REMOVE LIQUIDITY ****
@@ -109,13 +124,17 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         address to,
         uint deadline
     ) public virtual override ensure(deadline) returns (uint amountA, uint amountB) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
-        IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        IUniswapV2Pair(pair).transferFrom(_msgSender(), pair, liquidity); // send liquidity to pair
         (uint amount0, uint amount1) = IUniswapV2Pair(pair).burn(to);
         (address token0,) = UniswapV2Library.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
         require(amountA >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
         require(amountB >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
+        */
     }
     function removeLiquidityETH(
         address token,
@@ -125,6 +144,9 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         address to,
         uint deadline
     ) public virtual override ensure(deadline) returns (uint amountToken, uint amountETH) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         (amountToken, amountETH) = removeLiquidity(
             token,
             WETH,
@@ -137,6 +159,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         TransferHelper.safeTransfer(token, to, amountToken);
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
+        */
     }
     function removeLiquidityWithPermit(
         address tokenA,
@@ -148,10 +171,14 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint deadline,
         bool approveMax, uint8 v, bytes32 r, bytes32 s
     ) external virtual override returns (uint amountA, uint amountB) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
         uint value = approveMax ? uint(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IUniswapV2Pair(pair).permit(_msgSender(), address(this), value, deadline, v, r, s);
         (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
+        */
     }
     function removeLiquidityETHWithPermit(
         address token,
@@ -162,10 +189,14 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint deadline,
         bool approveMax, uint8 v, bytes32 r, bytes32 s
     ) external virtual override returns (uint amountToken, uint amountETH) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         address pair = UniswapV2Library.pairFor(factory, token, WETH);
         uint value = approveMax ? uint(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IUniswapV2Pair(pair).permit(_msgSender(), address(this), value, deadline, v, r, s);
         (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
+        */
     }
 
     // **** REMOVE LIQUIDITY (supporting fee-on-transfer tokens) ****
@@ -177,6 +208,9 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         address to,
         uint deadline
     ) public virtual override ensure(deadline) returns (uint amountETH) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         (, amountETH) = removeLiquidity(
             token,
             WETH,
@@ -189,6 +223,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
+        */
     }
     function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
         address token,
@@ -199,12 +234,16 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint deadline,
         bool approveMax, uint8 v, bytes32 r, bytes32 s
     ) external virtual override returns (uint amountETH) {
+        // USE THE REAL ROUTER FOR THIS
+        require(false == true, 'OpenGSNRouter: NOT_SUPPORTED');
+        /**
         address pair = UniswapV2Library.pairFor(factory, token, WETH);
         uint value = approveMax ? uint(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IUniswapV2Pair(pair).permit(_msgSender(), address(this), value, deadline, v, r, s);
         amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(
             token, liquidity, amountTokenMin, amountETHMin, to, deadline
         );
+        */
     }
 
     // **** SWAP ****
@@ -231,7 +270,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], _msgSender(), UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
     }
@@ -245,7 +284,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], _msgSender(), UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
     }
@@ -275,7 +314,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], _msgSender(), UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, address(this));
         IWETH(WETH).withdraw(amounts[amounts.length - 1]);
@@ -292,7 +331,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], _msgSender(), UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, address(this));
         IWETH(WETH).withdraw(amounts[amounts.length - 1]);
@@ -313,7 +352,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
         // refund dust eth, if any
-        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
+        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(_msgSender(), msg.value - amounts[0]);
     }
 
     // **** SWAP (supporting fee-on-transfer tokens) ****
@@ -344,7 +383,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint deadline
     ) external virtual override ensure(deadline) {
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn
+            path[0], _msgSender(), UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
         uint balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
@@ -390,7 +429,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     {
         require(path[path.length - 1] == WETH, 'UniswapV2Router: INVALID_PATH');
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn
+            path[0], _msgSender(), UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint amountOut = IERC20(WETH).balanceOf(address(this));
